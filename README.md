@@ -65,7 +65,7 @@ type User {
 type Query {
   articles(
     filter: ArticleFilter,
-    # Так же можно указать значения по умолчанию
+    # Также можно указать значения по умолчанию
     page: Int = 1,
     perPage: Int = 10,
     sort: ArticleSort = ArticleSort.CREATED_AT_DESC
@@ -170,4 +170,4 @@ input UserUpdateInput {
 - [Prettier](https://prettier.io/) – форматтер кода, чтобы придерживаться
   одинаковой стилистики кода во всём проекте.
 
-  > Так же вы можете использовать [ESLint](https://eslint.org/): в отличии от [Prettier](https://prettier.io/) он имеет большое количество настроек и систему плагинов. В нашем случае встроенные в [TypeScript](http://www.typescriptlang.org/) средства решают большинство задач линтера.
+  > Также вы можете использовать [ESLint](https://eslint.org/): в отличии от [Prettier](https://prettier.io/) он имеет большое количество настроек и систему плагинов. В нашем случае встроенные в [TypeScript](http://www.typescriptlang.org/) средства решают большинство задач линтера.
