@@ -2,6 +2,8 @@
 
 > Написанные ниже практики являются моим личным предпочтением и лишь одним из множества вариантов построения архитектуры. Выбирайте инструменты исходя из ваших задач и вашего опыта.
 
+> Крайне рекомендую для начала ознакомиться с [данным материалом](https://github.com/nodkz/conf-talks/tree/master/articles/graphql/schema-design) (автор – [nodkz](https://github.com/nodkz)), посвящённым практикам проектирования схемы.
+
 ## Начинаем работу
 
 Для начала нужно запустить базу данных _PostgreSQL_:
@@ -37,6 +39,94 @@ yarn start
 - `ormconfig.json` – файл конфигурации [TypeORM](https://typeorm.io/#/) (**следует добавить в _.gitignore_ в вашем проекте**).
 - `package.json` – основа почти любого `Node.js`-проекта :).
 - `tsconfig.json` - файл конфигурации [TypeScript](http://www.typescriptlang.org/).
+
+## Лучшие практики
+
+### Запросы
+
+- Для запросов, возвращающих список объектов, возвращаемый всегда должен быть представлен в виде `[Type!]!`, например:
+
+  ```graphql
+  type Query {
+    users: [Users!]!
+  }
+
+  type User {
+    # ...
+  }
+  ```
+
+  Это позволит:
+
+  - Не выводить в списке `null`, например: `[null, { ... }, null]` – такого не будет.
+  - При отсутствии данных к выводу отправлять клиенту пустой массив `[]`, весто `null` (что упрощает работу _Front End_) разработчикам);
+
+- Фильтры, сортировку и пагинацию следует выносить в отдельные объекты:
+
+  ```graphql
+  type Query {
+    articles(
+      filter: ArticleFilter,
+      # Так же можно указать значения по умолчанию
+      page: Int = 1,
+      perPage: Int = 10,
+      sort: ArticleSort = ArticleSort.CREATED_AT_DESC
+    ): [Article!]!
+  }
+
+  enum Language {
+    EN
+    RU
+  }
+
+  enum ArticleSort {
+    TITLE_ASC
+    TITLE_DESC
+    CREATED_AT_ASC
+    CREATED_AT_DESC
+  }
+
+  type ArticleFilter {
+    archived: Boolean!
+    language: Language!
+  }
+
+  type Article {
+    # ...
+  }
+  ```
+
+### Мутации
+
+- Названия мутаций следует задавать по схеме: `{объект}{Действие}` (в `camelCase`), так как это позволяет проще искать мутации, связанные с конкретной моделью.
+- Данные, которые мы хотим отправть на сервер следует вкладывать в объект `input`. В случае, если в дополнение к данным необходимо указать `ID` объекта, то мы передаём его первым аргументом нашей мутации (см. `userUpdate`, `userDelete`).
+- При обновлении возвращаем обновлённый объект пользователя.
+- При удалении пользователя возвращаем удалённый объект (может пригодится для уведомлений).
+
+```graphql
+type Mutation {
+type Mutation {
+  userCreate(input: UserCreateInput!): User!
+  userUpdate(id: ID!, input: UserUpdateUnput!): User!
+  userDelete(id: ID!): User!
+}
+
+type User {
+  id: ID!
+  # ...
+}
+
+input UserCreateInput {
+  email: String!
+  password: String!
+  # ...
+}
+
+input UserUpdateInput {
+  # ...
+}
+}
+```
 
 ## Инструменты
 
