@@ -69,7 +69,7 @@ type Query {
     page: Int = 1,
     perPage: Int = 10,
     sort: ArticleSort = ArticleSort.CREATED_AT_DESC
-  ): [Article!]!
+  ): ArticlePagination!
 }
 
 enum Language {
@@ -89,10 +89,26 @@ type ArticleFilter {
   language: Language!
 }
 
+type ArticlePagination {
+  items: [Article!]!
+  pageInfo: PaginationInfo!
+}
+
+type PaginationInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  page: Int!
+  perPage: Int!
+  totalItems: Int!
+  totalPages: Int!
+}
+
 type Article {
   # ...
 }
 ```
+
+> Обратите внимание на пагиниацю. Такой подход следует применять ко всем запросам, возвращающим списки.
 
 ### Мутации
 
