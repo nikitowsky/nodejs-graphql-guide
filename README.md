@@ -122,7 +122,6 @@ input UserCreateInput {
 input UserUpdateInput {
   # ...
 }
-}
 ```
 
 ## Инструменты
