@@ -124,6 +124,31 @@ input UserUpdateInput {
 }
 ```
 
+### Обработка ошибок
+
+- Поскольку мы используем [apollo-server](https://www.apollographql.com/docs/apollo-server/), любые ошибки желательно обрабатывать [встроенными обработчиками](https://www.apollographql.com/docs/apollo-server/data/errors/): `AuthenticationError`, `ForbiddenError`, `UserInputError`, `ApolloError`. Но вам ничего не мешает при необходимости создать свой обработчик.
+- Для ошибок `UserInputError` в теле ответа следует отправлять дополнительную информацию по полям, не прошедшим валидацию, пример:
+
+```diff
+ export const userCreate = async (root: any, args: UserCreateArguments) => {
+   const user = User.create({
+     email: args.input.email,
+     password: args.input.password,
+     username: args.input.username,
+   });
+
++ const errors = await validate(user);
++
++ if (errors.length > 0) {
++   throw new UserInputError('Validation failed!', {
++     fields: formatClassValidatorErrors(errors),
++   });
++ }
+
+   return await user.save();
+ };
+```
+
 ## Инструменты
 
 - [Prettier](https://prettier.io/) – форматтер кода, чтобы придерживаться
