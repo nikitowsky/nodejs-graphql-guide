@@ -44,57 +44,55 @@ yarn start
 
 ### Запросы
 
-- Для запросов, возвращающих список объектов, возвращаемый всегда должен быть представлен в виде `[Type!]!`, например:
-
-  ```graphql
-  type Query {
-    users: [Users!]!
-  }
-
-  type User {
-    # ...
-  }
-  ```
-
-  Это позволит:
+- Для запросов, возвращающих список объектов, возвращаемый всегда должен быть представлен в виде `[Type!]!`, это позволит:
 
   - Не выводить в списке `null`, например: `[null, { ... }, null]` – такого не будет.
-  - При отсутствии данных к выводу отправлять клиенту пустой массив `[]`, весто `null` (что упрощает работу _Front End_) разработчикам);
+  - При отсутствии данных к выводу отправлять клиенту пустой массив `[]`, весто `null` (что упрощает работу _Front End_) разработчикам).
+
+```graphql
+type Query {
+  users: [Users!]!
+}
+
+type User {
+  # ...
+}
+```
 
 - Фильтры, сортировку и пагинацию следует выносить в отдельные объекты:
 
-  ```graphql
-  type Query {
-    articles(
-      filter: ArticleFilter,
-      # Так же можно указать значения по умолчанию
-      page: Int = 1,
-      perPage: Int = 10,
-      sort: ArticleSort = ArticleSort.CREATED_AT_DESC
-    ): [Article!]!
-  }
+```graphql
+type Query {
+  articles(
+    filter: ArticleFilter,
+    # Так же можно указать значения по умолчанию
+    page: Int = 1,
+    perPage: Int = 10,
+    sort: ArticleSort = ArticleSort.CREATED_AT_DESC
+  ): [Article!]!
+}
 
-  enum Language {
-    EN
-    RU
-  }
+enum Language {
+  EN
+  RU
+}
 
-  enum ArticleSort {
-    TITLE_ASC
-    TITLE_DESC
-    CREATED_AT_ASC
-    CREATED_AT_DESC
-  }
+enum ArticleSort {
+  TITLE_ASC
+  TITLE_DESC
+  CREATED_AT_ASC
+  CREATED_AT_DESC
+}
 
-  type ArticleFilter {
-    archived: Boolean!
-    language: Language!
-  }
+type ArticleFilter {
+  archived: Boolean!
+  language: Language!
+}
 
-  type Article {
-    # ...
-  }
-  ```
+type Article {
+  # ...
+}
+```
 
 ### Мутации
 
@@ -104,7 +102,6 @@ yarn start
 - При удалении пользователя возвращаем удалённый объект (может пригодится для уведомлений).
 
 ```graphql
-type Mutation {
 type Mutation {
   userCreate(input: UserCreateInput!): User!
   userUpdate(id: ID!, input: UserUpdateUnput!): User!
