@@ -1,0 +1,29 @@
+{
+  "name": "nodejs-graphql-guide",
+  "version": "1.0.0",
+  "author": "Nikita Borisowsky (https://github.com/borisowsky)",
+  "scripts": {
+    "start": "NODE_ENV=development ts-node-dev src/index.ts",
+    "serve": "NODE_ENV=production ts-node src/index.ts",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "migration:generate": "yarn typeorm migration:generate",
+    "migration:run": "yarn typeorm migration:run"
+  },
+  "dependencies": {
+    "@types/graphql": "^14.5.0",
+    "@types/node": "^12.7.11",
+    "apollo-server": "^2.9.5",
+    "class-validator": "^0.10.1",
+    "graphql": "^14.5.8",
+    "pg": "^7.12.1",
+    "reflect-metadata": "^0.1.13",
+    "ts-node": "^8.4.1",
+    "typeorm": "^0.2.19",
+    "typescript": "^3.7.0-beta"
+  },
+  "devDependencies": {
+    "prettier": "^1.18.2",
+    "ts-node-dev": "^1.0.0-pre.43",
+    "tsconfig-paths": "^3.9.0"
+  }
+}
