@@ -165,6 +165,61 @@ input UserUpdateInput {
  };
 ```
 
+### N+1
+
+Вот что происходит, когда у нас есть вложенный запрос (например, `получить все посты у всех пользователей`):
+
+```sql
+query: SELECT "User"."id" AS "User_id", "User"."email" AS "User_email", "User"."password" AS "User_password", "User"."username" AS "User_username", "User"."bio" AS "User_bio", "User"."image" AS "User_image" FROM "user" "User"
+query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_title", "Article"."slug" AS "Article_slug", "Article"."content" AS "Article_content", "Article"."authorId" AS "Article_authorId" FROM "article" "Article" WHERE "Article"."authorId" = $1 -- PARAMETERS: [13]
+query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_title", "Article"."slug" AS "Article_slug", "Article"."content" AS "Article_content", "Article"."authorId" AS "Article_authorId" FROM "article" "Article" WHERE "Article"."authorId" = $1 -- PARAMETERS: [22]
+query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_title", "Article"."slug" AS "Article_slug", "Article"."content" AS "Article_content", "Article"."authorId" AS "Article_authorId" FROM "article" "Article" WHERE "Article"."authorId" = $1 -- PARAMETERS: [23]
+```
+
+Чтобы решить эту проблему, следует воспользоваться библиотекой [dataloader](https://github.com/graphql/dataloader):
+
+```diff
++ import Dataloader from 'dataloader';
++
+- import { User, Article } from '../../entities';
++ import { User } from '../../entities';
+
++ const getArticlesOfUsers = async (ids: any[]) => {
++   const users = await User.createQueryBuilder('user')
++     .leftJoinAndSelect('user.articles', 'article')
++     .where('user.id IN (:...ids)', { ids })
++     .getMany();
++
++   return users.map((user) => user.articles);
++ };
++
+  export const users = async (root: any) => {
+    const users = await User.find();
+
++ const articlesLoader = new Dataloader((keys) => getArticlesOfUsers(keys));
++
+-   const usersWithArticles = users.map(async (user) => {
++   const usersWithArticles = users.map((user) => {
+      return {
+        ...user,
+-       articles: await Article.find({ author: user }),
++       articles: articlesLoader.load(user.id)
+      };
+    });
+
+    return usersWithArticles;
+  };
+```
+
+На выходе мы получаем решённую `N+1` проблему:
+
+```sql
+query: SELECT "User"."id" AS "User_id", "User"."email" AS "User_email", "User"."password" AS "User_password", "User"."username" AS "User_username", "User"."bio" AS "User_bio", "User"."image" AS "User_image" FROM "user" "User"
+query: SELECT "user"."id" AS "user_id", "user"."email" AS "user_email", "user"."password" AS "user_password", "user"."username" AS "user_username", "user"."bio" AS "user_bio", "user"."image" AS "user_image", "article"."id" AS "article_id", "article"."title" AS "article_title", "article"."slug" AS "article_slug", "article"."content" AS "article_content", "article"."authorId" AS "article_authorId" FROM "user" "user" LEFT JOIN "article" "article" ON "article"."authorId"="user"."id" WHERE "user"."id" IN ($1, $2, $3) -- PARAMETERS: [13,22,23]
+```
+
+> На самом деле всего этого можно было бы избежать, используя [Prisma](https://www.prisma.io/) в качестве ORM, так как она умеет решать эту проблему "из коробки" :).
+
 ## Инструменты
 
 - [Prettier](https://prettier.io/) – форматтер кода, чтобы придерживаться

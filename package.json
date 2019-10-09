@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "author": "Nikita Borisowsky (https://github.com/borisowsky)",
   "scripts": {
-    "start": "NODE_ENV=development ts-node-dev src/index.ts",
+    "start": "NODE_ENV=development ts-node-dev --respawn --transpileOnly src/index.ts",
     "serve": "NODE_ENV=production ts-node src/index.ts",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migration:generate": "yarn typeorm migration:generate",
@@ -14,9 +14,11 @@
     "@types/node": "^12.7.11",
     "apollo-server": "^2.9.5",
     "class-validator": "^0.10.1",
+    "dataloader": "^1.4.0",
     "graphql": "^14.5.8",
     "pg": "^7.12.1",
     "reflect-metadata": "^0.1.13",
+    "slugify": "^1.3.5",
     "ts-node": "^8.4.1",
     "typeorm": "^0.2.19",
     "typescript": "^3.7.0-beta"

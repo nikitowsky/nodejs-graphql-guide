@@ -1,5 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, BaseEntity } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  BaseEntity,
+  OneToMany,
+} from 'typeorm';
 import { IsEmail, IsNotEmpty } from 'class-validator';
+import { Article } from './Article.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -7,7 +14,7 @@ export class User extends BaseEntity {
   id: number;
 
   @Column({ unique: true })
-  @IsEmail({}, { message: 'Invalid E-mail' })
+  @IsEmail({}, { message: 'Invalid E-Mail' })
   email: string;
 
   @Column()
@@ -23,4 +30,9 @@ export class User extends BaseEntity {
 
   @Column({ nullable: true })
   image: string;
+
+  @OneToMany((type) => Article, (article) => article.author, {
+    nullable: false,
+  })
+  articles: Article[];
 }

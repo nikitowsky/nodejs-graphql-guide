@@ -14,6 +14,7 @@ const main = async () => {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    cacheControl: false,
   });
 
   return server.listen();
