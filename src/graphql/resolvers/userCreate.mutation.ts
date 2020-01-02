@@ -12,7 +12,7 @@ export interface UserCreateArguments {
   };
 }
 
-export const userCreate = async (root: any, args: UserCreateArguments) => {
+export const userCreate = async (_root: any, args: UserCreateArguments) => {
   const user = User.create({
     email: args.input.email,
     password: args.input.password,

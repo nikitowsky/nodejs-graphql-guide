@@ -2,7 +2,9 @@ import Dataloader from 'dataloader';
 
 import { User } from '../../entities';
 
-const getArticlesOfUsers = async (ids: any[]) => {
+type UserID = string | number;
+
+const getArticlesOfUsers = async (ids: UserID[]) => {
   const users = await User.createQueryBuilder('user')
     .leftJoinAndSelect('user.articles', 'article')
     .where('user.id IN (:...ids)', { ids })
@@ -14,7 +16,9 @@ const getArticlesOfUsers = async (ids: any[]) => {
 export const users = async (root: any) => {
   const users = await User.find();
 
-  const articlesLoader = new Dataloader((keys) => getArticlesOfUsers(keys));
+  const articlesLoader = new Dataloader((keys: UserID[]) =>
+    getArticlesOfUsers(keys),
+  );
 
   const usersWithArticles = users.map((user) => {
     return {

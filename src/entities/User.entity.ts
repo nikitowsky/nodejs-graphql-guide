@@ -31,8 +31,12 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   image: string;
 
-  @OneToMany((type) => Article, (article) => article.author, {
-    nullable: false,
-  })
+  @OneToMany(
+    (_type) => Article,
+    (article) => article.author,
+    {
+      nullable: false,
+    },
+  )
   articles: Article[];
 }

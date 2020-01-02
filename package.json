@@ -1,31 +1,36 @@
 {
   "name": "nodejs-graphql-guide",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Nikita Borisowsky (https://github.com/borisowsky)",
+  "main": "./dist/index.js",
   "scripts": {
-    "start": "NODE_ENV=development ts-node-dev --respawn --transpileOnly src/index.ts",
-    "serve": "NODE_ENV=production ts-node src/index.ts",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
-    "migration:generate": "yarn typeorm migration:generate",
-    "migration:run": "yarn typeorm migration:run"
+    "start": "NODE_ENV=development concurrently yarn:start:*",
+    "start:tsc": "tsc --watch",
+    "start:nodemon": "nodemon .",
+    "build": "tsc",
+    "serve": "NODE_ENV=production node .",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -f ./src/ormconfig.ts",
+    "db:makemigrations": "yarn typeorm migration:generate",
+    "db:migrate": "yarn typeorm migration:run"
   },
   "dependencies": {
-    "@types/graphql": "^14.5.0",
-    "@types/node": "^12.7.11",
-    "apollo-server": "^2.9.5",
-    "class-validator": "^0.10.1",
-    "dataloader": "^1.4.0",
-    "graphql": "^14.5.8",
-    "pg": "^7.12.1",
-    "reflect-metadata": "^0.1.13",
-    "slugify": "^1.3.5",
-    "ts-node": "^8.4.1",
-    "typeorm": "^0.2.19",
-    "typescript": "^3.7.0-beta"
+    "@types/graphql": "14.5.0",
+    "@types/node": "13.1.2",
+    "apollo-server": "2.9.15",
+    "class-validator": "0.11.0",
+    "dataloader": "2.0.0",
+    "graphql": "14.5.8",
+    "nodemon": "2.0.2",
+    "pg": "7.17.0",
+    "reflect-metadata": "0.1.13",
+    "slugify": "1.3.6",
+    "typeorm": "0.2.22",
+    "typescript": "3.7.4"
   },
   "devDependencies": {
-    "prettier": "^1.18.2",
-    "ts-node-dev": "^1.0.0-pre.43",
-    "tsconfig-paths": "^3.9.0"
+    "concurrently": "5.0.2",
+    "prettier": "1.19.1",
+    "ts-node": "8.5.4",
+    "tsconfig-paths": "3.9.0"
   }
 }

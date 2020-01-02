@@ -13,7 +13,7 @@ export interface ArticleCreateArguments {
 }
 
 export const articleCreate = async (
-  root: any,
+  _root: any,
   args: ArticleCreateArguments,
 ) => {
   const article = Article.create({

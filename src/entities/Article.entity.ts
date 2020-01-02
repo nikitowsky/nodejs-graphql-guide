@@ -24,10 +24,14 @@ export class Article extends BaseEntity {
   @Column('text', { nullable: true })
   content: string;
 
-  @ManyToOne((type) => User, (user) => user.articles, {
-    cascade: true,
-    nullable: false,
-  })
+  @ManyToOne(
+    (_type) => User,
+    (user) => user.articles,
+    {
+      cascade: true,
+      nullable: false,
+    },
+  )
   @IsNotEmpty()
   author: User;
 }

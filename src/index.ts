@@ -2,11 +2,13 @@ import 'reflect-metadata';
 import { ApolloServer } from 'apollo-server';
 import { createConnection } from 'typeorm';
 
+import ormconfig from './ormconfig';
+
 import { typeDefs, resolvers } from './graphql';
 
 const main = async () => {
   try {
-    await createConnection();
+    await createConnection(ormconfig);
   } catch (e) {
     console.log('⚡ Cannot connect to the database:', e.message);
   }
