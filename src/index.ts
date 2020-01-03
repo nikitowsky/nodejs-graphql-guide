@@ -19,6 +19,22 @@ const main = async () => {
     cacheControl: false,
   });
 
+  (['SIGINT', 'SIGTERM'] as NodeJS.Signals[]).forEach((signal) => {
+    process.on(signal, async () => {
+      console.info(
+        `Got ${signal}. Graceful shutdown at ${new Date().toISOString()}`,
+      );
+
+      try {
+        await server.stop();
+        process.exit();
+      } catch (e) {
+        console.error(e);
+        process.exitCode = 1;
+      }
+    });
+  });
+
   return server.listen();
 };
 
