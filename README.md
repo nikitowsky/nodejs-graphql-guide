@@ -232,7 +232,7 @@ query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_titl
   };
 ```
 
-На выходе мы вмето 6 запросов мы получаем 1. И, следовательно, решённую `N+1` проблему:
+На выходе мы вмето **6 запросов мы получаем 1 (!)**. И, следовательно, решённую `N+1` проблему:
 
 ```sql
 query: SELECT "user"."id" AS "user_id", "user"."email" AS "user_email", "user"."password" AS "user_password", "user"."username" AS "user_username", "user"."bio" AS "user_bio", "user"."image" AS "user_image", "article"."id" AS "article_id", "article"."title" AS "article_title", "article"."slug" AS "article_slug", "article"."content" AS "article_content", "article"."authorId" AS "article_authorId", "author"."id" AS "author_id", "author"."email" AS "author_email", "author"."password" AS "author_password", "author"."username" AS "author_username", "author"."bio" AS "author_bio", "author"."image" AS "author_image" FROM "user" "user" LEFT JOIN "article" "article" ON "article"."authorId"="user"."id"  LEFT JOIN "user" "author" ON "author"."id"="article"."authorId" WHERE "user"."id" IN (?, ?, ?) -- PARAMETERS: ["1","2","3"]
