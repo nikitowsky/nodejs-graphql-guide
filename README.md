@@ -40,7 +40,7 @@ npm start
 ---
 
 - `.prettierrc` – файл конфигурации [Prettier](https://prettier.io/).
-- `ormconfig.json` – файл конфигурации [TypeORM](https://typeorm.io/#/) (**следует добавить в _.gitignore_ в вашем проекте**).
+- `ormconfig.json` – файл конфигурации [TypeORM](https://typeorm.io/#/).
 - `package.json` – основа почти любого `Node.js`-проекта :).
 - `tsconfig.json` - файл конфигурации [TypeScript](http://www.typescriptlang.org/).
 
