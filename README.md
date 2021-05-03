@@ -4,18 +4,22 @@
 
 > Крайне рекомендую для начала ознакомиться с [данным материалом](https://github.com/nodkz/conf-talks/tree/master/articles/graphql/schema-design) (автор – [nodkz](https://github.com/nodkz)), посвящённым практикам проектирования схемы.
 
-## Начинаем работу
+## Запуск сервера
 
-Для начала нужно запустить базу данных _PostgreSQL_:
+Если используем `yarn`:
 
 ```sh
-docker-compose up --build
+yarn
+yarn db:migrate
+yarn start
 ```
 
-Затем, запустить наш сервер в режиме разработки:
+Если используем `npm`:
 
 ```sh
-yarn start
+npm install
+npm run db:migrate
+npm start
 ```
 
 ## Структура проекта
@@ -146,34 +150,47 @@ input UserUpdateInput {
 - Для ошибок `UserInputError` в теле ответа следует отправлять дополнительную информацию по полям, не прошедшим валидацию, пример:
 
 ```diff
- export const userCreate = async (root: any, args: UserCreateArguments) => {
-   const user = User.create({
-     email: args.input.email,
-     password: args.input.password,
-     username: args.input.username,
-   });
+  export const userCreate = async (root: any, args: UserCreateArguments) => {
+    const user = User.create({
+      email: args.input.email,
+      password: args.input.password,
+      username: args.input.username,
+    });
 
-+ const errors = await validate(user);
++   const errors = await validate(user);
 +
-+ if (errors.length > 0) {
-+   throw new UserInputError('Validation failed!', {
-+     fields: formatClassValidatorErrors(errors),
-+   });
-+ }
++   if (errors.length > 0) {
++     throw new UserInputError('Validation failed!', {
++       fields: formatClassValidatorErrors(errors),
++     });
++   }
 
-   return await user.save();
- };
+    return await user.save();
+  };
 ```
 
 ### N+1
 
-Вот что происходит, когда у нас есть вложенный запрос (например, `получить все посты у всех пользователей`):
+Вот что происходит, когда у нас есть вложенный запрос (например, `получить все посты у пользователей с ID = 1, 2, 3`):
+
+```graphql
+query {
+  users(ids: [1, 2, 3]) {
+    id
+    articles {
+      id
+    }
+  }
+}
+```
 
 ```sql
-query: SELECT "User"."id" AS "User_id", "User"."email" AS "User_email", "User"."password" AS "User_password", "User"."username" AS "User_username", "User"."bio" AS "User_bio", "User"."image" AS "User_image" FROM "user" "User"
-query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_title", "Article"."slug" AS "Article_slug", "Article"."content" AS "Article_content", "Article"."authorId" AS "Article_authorId" FROM "article" "Article" WHERE "Article"."authorId" = $1 -- PARAMETERS: [13]
-query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_title", "Article"."slug" AS "Article_slug", "Article"."content" AS "Article_content", "Article"."authorId" AS "Article_authorId" FROM "article" "Article" WHERE "Article"."authorId" = $1 -- PARAMETERS: [22]
-query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_title", "Article"."slug" AS "Article_slug", "Article"."content" AS "Article_content", "Article"."authorId" AS "Article_authorId" FROM "article" "Article" WHERE "Article"."authorId" = $1 -- PARAMETERS: [23]
+query: SELECT "User"."id" AS "User_id", "User"."email" AS "User_email", "User"."password" AS "User_password", "User"."username" AS "User_username", "User"."bio" AS "User_bio", "User"."image" AS "User_image" FROM "user" "User" WHERE "User"."id" IN (?) -- PARAMETERS: ["1"]
+query: SELECT "User"."id" AS "User_id", "User"."email" AS "User_email", "User"."password" AS "User_password", "User"."username" AS "User_username", "User"."bio" AS "User_bio", "User"."image" AS "User_image" FROM "user" "User" WHERE "User"."id" IN (?) -- PARAMETERS: ["2"]
+query: SELECT "User"."id" AS "User_id", "User"."email" AS "User_email", "User"."password" AS "User_password", "User"."username" AS "User_username", "User"."bio" AS "User_bio", "User"."image" AS "User_image" FROM "user" "User" WHERE "User"."id" IN (?) -- PARAMETERS: ["3"]
+query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_title", "Article"."slug" AS "Article_slug", "Article"."content" AS "Article_content", "Article"."authorId" AS "Article_authorId" FROM "article" "Article" WHERE "Article"."authorId" = ? -- PARAMETERS: [1]
+query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_title", "Article"."slug" AS "Article_slug", "Article"."content" AS "Article_content", "Article"."authorId" AS "Article_authorId" FROM "article" "Article" WHERE "Article"."authorId" = ? -- PARAMETERS: [2]
+query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_title", "Article"."slug" AS "Article_slug", "Article"."content" AS "Article_content", "Article"."authorId" AS "Article_authorId" FROM "article" "Article" WHERE "Article"."authorId" = ? -- PARAMETERS: [3]
 ```
 
 Чтобы решить эту проблему, следует воспользоваться библиотекой [dataloader](https://github.com/graphql/dataloader):
@@ -188,34 +205,37 @@ query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_titl
 +   const users = await User.createQueryBuilder('user')
 +     .leftJoinAndSelect('user.articles', 'article')
 +     .where('user.id IN (:...ids)', { ids })
++     .leftJoinAndSelect('article.author', 'author')
 +     .getMany();
+
 +
 +   return users.map((user) => user.articles);
 + };
 +
-  export const users = async (root: any) => {
-    const users = await User.find();
-
 + const articlesLoader = new Dataloader((keys) => getArticlesOfUsers(keys));
 +
--   const usersWithArticles = users.map(async (user) => {
-+   const usersWithArticles = users.map((user) => {
-      return {
-        ...user,
+  export const users = async (root: any, args: { ids: UserID[] }) => {
+-   const users = args.ids.map(async (id) => {
+-     const user = await User.findOne(id);
+-
+-     return {
+-       ...user,
 -       articles: await Article.find({ author: user }),
-+       articles: articlesLoader.load(user.id)
-      };
-    });
+-     };
+-   });
 
-    return usersWithArticles;
++   const users = args.ids.map((id) => {
++     return articlesLoader.load(id);
++   });
+
+    return users;
   };
 ```
 
-На выходе мы получаем решённую `N+1` проблему:
+На выходе мы вмето 6 запросов мы получаем 1. И, следовательно, решённую `N+1` проблему:
 
 ```sql
-query: SELECT "User"."id" AS "User_id", "User"."email" AS "User_email", "User"."password" AS "User_password", "User"."username" AS "User_username", "User"."bio" AS "User_bio", "User"."image" AS "User_image" FROM "user" "User"
-query: SELECT "user"."id" AS "user_id", "user"."email" AS "user_email", "user"."password" AS "user_password", "user"."username" AS "user_username", "user"."bio" AS "user_bio", "user"."image" AS "user_image", "article"."id" AS "article_id", "article"."title" AS "article_title", "article"."slug" AS "article_slug", "article"."content" AS "article_content", "article"."authorId" AS "article_authorId" FROM "user" "user" LEFT JOIN "article" "article" ON "article"."authorId"="user"."id" WHERE "user"."id" IN ($1, $2, $3) -- PARAMETERS: [13,22,23]
+query: SELECT "user"."id" AS "user_id", "user"."email" AS "user_email", "user"."password" AS "user_password", "user"."username" AS "user_username", "user"."bio" AS "user_bio", "user"."image" AS "user_image", "article"."id" AS "article_id", "article"."title" AS "article_title", "article"."slug" AS "article_slug", "article"."content" AS "article_content", "article"."authorId" AS "article_authorId", "author"."id" AS "author_id", "author"."email" AS "author_email", "author"."password" AS "author_password", "author"."username" AS "author_username", "author"."bio" AS "author_bio", "author"."image" AS "author_image" FROM "user" "user" LEFT JOIN "article" "article" ON "article"."authorId"="user"."id"  LEFT JOIN "user" "author" ON "author"."id"="article"."authorId" WHERE "user"."id" IN (?, ?, ?) -- PARAMETERS: ["1","2","3"]
 ```
 
 > На самом деле всего этого можно было бы избежать, используя [Prisma](https://www.prisma.io/) в качестве ORM, так как она умеет решать эту проблему "из коробки" :).

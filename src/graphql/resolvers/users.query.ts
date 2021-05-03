@@ -1,31 +1,38 @@
 import Dataloader from 'dataloader';
 
-import { User } from '../../entities';
+import { Article, User } from '../../entities';
 
 type UserID = string | number;
 
-const getArticlesOfUsers = async (ids: UserID[]) => {
-  const users = await User.createQueryBuilder('user')
-    .leftJoinAndSelect('user.articles', 'article')
-    .where('user.id IN (:...ids)', { ids })
-    .getMany();
+// const usersWithArticles = async (ids: UserID[]) => {
+//   const users = await User.createQueryBuilder('user')
+//     .leftJoinAndSelect('user.articles', 'article')
+//     .where('user.id IN (:...ids)', { ids })
+//     .leftJoinAndSelect('article.author', 'author')
+//     .getMany();
 
-  return users.map((user) => user.articles);
-};
+//   return users;
+// };
 
-export const users = async (root: any) => {
-  const users = await User.find();
+// export const users = async (root: any, args: { ids: UserID[] }) => {
+//   const articlesLoader = new Dataloader(usersWithArticles);
 
-  const articlesLoader = new Dataloader((keys: UserID[]) =>
-    getArticlesOfUsers(keys),
-  );
+//   const users = args.ids.map((id) => {
+//     return articlesLoader.load(id);
+//   });
 
-  const usersWithArticles = users.map((user) => {
+//   return users;
+// };
+
+export const users = async (_root: any, args: { ids: UserID[] }) => {
+  const users = args.ids.map(async (id) => {
+    const user = await User.findOne(id);
+
     return {
       ...user,
-      articles: articlesLoader.load(user.id),
+      articles: await Article.find({ author: user }),
     };
   });
 
-  return usersWithArticles;
+  return users;
 };

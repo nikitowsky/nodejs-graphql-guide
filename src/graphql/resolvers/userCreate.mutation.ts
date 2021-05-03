@@ -17,6 +17,7 @@ export const userCreate = async (_root: any, args: UserCreateArguments) => {
     email: args.input.email,
     password: args.input.password,
     username: args.input.username,
+    articles: [],
   });
 
   // Input validation
