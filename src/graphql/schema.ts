@@ -2,7 +2,9 @@ import { gql } from 'apollo-server';
 
 export const typeDefs = gql`
   type Query {
+    user(id: ID!): User!
     users(ids: [ID!]!): [User!]!
+    article(id: ID!): Article!
   }
 
   type Mutation {
