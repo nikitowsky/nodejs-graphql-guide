@@ -205,7 +205,6 @@ query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_titl
 +   const users = await User.createQueryBuilder('user')
 +     .leftJoinAndSelect('user.articles', 'article')
 +     .where('user.id IN (:...ids)', { ids })
-+     .leftJoinAndSelect('article.author', 'author')
 +     .getMany();
 
 +
