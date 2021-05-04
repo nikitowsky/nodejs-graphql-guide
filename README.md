@@ -158,7 +158,7 @@ input UserUpdateInput {
     });
 
 +   const errors = await validate(user);
-+
+
 +   if (errors.length > 0) {
 +     throw new UserInputError('Validation failed!', {
 +       fields: formatClassValidatorErrors(errors),
@@ -197,7 +197,7 @@ query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_titl
 
 ```diff
 + import Dataloader from 'dataloader';
-+
+
 - import { User, Article } from '../../entities';
 + import { User } from '../../entities';
 
@@ -206,13 +206,12 @@ query: SELECT "Article"."id" AS "Article_id", "Article"."title" AS "Article_titl
 +     .leftJoinAndSelect('user.articles', 'article')
 +     .where('user.id IN (:...ids)', { ids })
 +     .getMany();
-
 +
 +   return users.map((user) => user.articles);
 + };
-+
+
 + const articlesLoader = new Dataloader((keys) => getArticlesOfUsers(keys));
-+
+
   export const users = async (root: any, args: { ids: UserID[] }) => {
 -   const users = args.ids.map(async (id) => {
 -     const user = await User.findOne(id);
